@@ -43,9 +43,10 @@ export PATH=$PATH:$RISCV/bin
   - `bsd` is obtained by `llvm-strip bsd.gdb`
   
 - copy these two files to Ubuntu18 so that GDB can refer to the symbols.
+  - `scp root@10.138.0.2:/home/mars/riscv/src/openbsd/sys/arch/riscv64/compile/GENERIC/obj/bsd.gdb .`
   - if failed to scp from freebsd12 to ubuntu18 directly, can use gcloud compute scp instead: on local laptop (as a relay):
   - `gcloud compute scp mars@openbsd65-rv64:/home/mars/riscv/img/bsd.gdb .`
-  - `gcloud compute scp ./bsd.gdb mars@ubuntu18:/home/mars/riscv/gdb4openbsd/`
+  - `gcloud compute scp ./bsd.gdb mars@ubuntu18:/home/mars/riscv/openbsdGDB/`
 
 - the bsd.gdb is referencing openbsd source code, prepare the source code and put it the same absolute path as it is on openbsd machine. 
   - `mkdir /home/mars/riscv/src/`
@@ -55,12 +56,12 @@ export PATH=$PATH:$RISCV/bin
 ### 5. Build bbl with bsd as payload
 ```
 ../configure \
-    --enable-logo \
     --host=riscv64-unknown-linux-gnu \
-    --with-payload=/home/mars/riscv/gdb4openbsd/bsd
+    --with-payload=/home/mars/riscv/openbsdGDB/bsd
+
+make
 ```
-- the binary bbl is located at: `busybear-linux/build/riscv-pk/bbl`, 
-- copy it to: `/home/mars/riscv/gdb4openbsd/`
+- the binary bbl is located at: `build/riscv-pk/bbl`, copy it to `/home/mars/riscv/openbsdGDB/` for easy manipulation
 
 - if build bbl fails due to `stubs-lp64.h`, check this patch and apply it to Makefile.in.[patch](https://github.com/riscv/riscv-pk/pull/114/commits/00f0dd04cbdb670f7e81d7fe5c686cb49e7cd182)
 
@@ -71,13 +72,13 @@ export PATH=$PATH:$RISCV/bin
 ```
 sudo qemu-system-riscv64 -s -S\
   -nographic -machine virt \
-  -kernel /home/mars/riscv/gdb4openbsd/bbl
+  -kernel /home/mars/riscv/openbsdGDB/bbl
 ```
 
 
 ### 7. Start gdb 
 - launch: 
-  - `cd /home/mars/riscv/gdb4openbsd/`
+  - `cd /home/mars/riscv/openbsdGDB/`
   - `riscv64-unknown-linux-gnu-gdb bsd.gdb`, or after enter gdb, `file /path/to/bsd.gdb`
 
 - inside gdb:
