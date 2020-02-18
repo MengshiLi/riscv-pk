@@ -68,19 +68,6 @@ make
 
 - if normal user has no privilege, try `sudo su` first.
 
-### 5b. Build bbl on OpenBSD
-- install riscv gnu tool chain on OpenBSD: `pkg_add riscv-elf-binutils riscv-elf-gcc riscv-elf-newlib`
-
-- build bbl: first ensure $CC is not set
-```
-git clone https://github.com/riscv/riscv-pk.git
-cd riscv-pk
-mkdir build && cd build
-../configure \
-    --host=riscv64-unknown-elf \
-    --with-payload=../../../img/bsd
-gmake
-```
 
 ### 5b. Build bbl on OpenBSD
 - install riscv gnu tool chain on OpenBSD: `pkg_add riscv-elf-binutils riscv-elf-gcc riscv-elf-newlib`
