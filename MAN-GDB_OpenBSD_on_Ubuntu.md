@@ -46,7 +46,7 @@ export PATH=$PATH:$RISCV/bin
   - `scp root@10.138.0.2:/home/mars/riscv/src/openbsd/sys/arch/riscv64/compile/GENERIC/obj/bsd.gdb .`
   - if failed to scp from freebsd12 to ubuntu18 directly, can use gcloud compute scp instead: on local laptop (as a relay):
   - `gcloud compute scp mars@openbsd65-rv64:/home/mars/riscv/img/bsd.gdb .`
-  - `gcloud compute scp ./bsd.gdb mars@ubuntu18:/home/mars/riscv/openbsdGDB/`
+  - `gcloud compute scp ./bsd.gdb mars@ubuntu18:/home/mars/riscv/gdb4openbsd/`
 
 - the bsd.gdb is referencing openbsd source code, prepare the source code and put it the same absolute path as it is on openbsd machine. 
   - `mkdir /home/mars/riscv/src/`
@@ -55,6 +55,7 @@ export PATH=$PATH:$RISCV/bin
 
 ### 5. Build bbl with bsd as payload
 ```
+
 ../configure \
     --host=riscv64-unknown-linux-gnu \
     --with-payload=/home/mars/riscv/openbsdGDB/bsd
@@ -81,11 +82,27 @@ mkdir build && cd build
 gmake
 ```
 
+### 5b. Build bbl on OpenBSD
+- install riscv gnu tool chain on OpenBSD: `pkg_add riscv-elf-binutils riscv-elf-gcc riscv-elf-newlib`
+
+- build bbl: first ensure $CC is not set
+```
+git clone https://github.com/riscv/riscv-pk.git
+cd riscv-pk
+mkdir build && cd build
+../configure \
+    --host=riscv64-unknown-elf \
+    --with-payload=../../../img/bsd
+gmake
+```
+
+
 ### 6. Run openbsd bbl in QEMU
 ```
-sudo qemu-system-riscv64 -s -S\
+qemu-system-riscv64 -s -S\
   -nographic -machine virt \
-  -kernel /home/mars/riscv/openbsdGDB/bbl
+  -d in_asm -D debug.log \
+  -kernel /home/mars/riscv/img/bbl 
 ```
 
 
@@ -94,8 +111,17 @@ sudo qemu-system-riscv64 -s -S\
   - `cd /home/mars/riscv/openbsdGDB/`
   - `riscv64-unknown-linux-gnu-gdb bsd.gdb`, or after enter gdb, `file /path/to/bsd.gdb`
 
-- inside gdb:
-  - `set architecture riscv:rv64`
-  - `target remote localhost:1234`
-  - `break _start`
-  - `continue`
+- inside (gdb):
+```
+set architecture riscv:rv64
+target remote localhost:1234
+set riscv use-compressed-breakpoints no
+break *0x80200000 //_start_kern_bootstrap
+continue
+```
+
+### Reference:
+- [How to debug](http://docs.keystone-enclave.org/en/latest/Getting-Started/How-to-Debug.html)
+- [sbi to linux](https://github.com/slavaim/riscv-notes/blob/master/bbl/sbi-to-linux.md)
+
+
